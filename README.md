@@ -1,5 +1,8 @@
 # K4YR0X IPv4 / CIDR Reference
 
+[🌐 Open the Live Website](https://k4yr0x.github.io/k4yr0x-ipv4-cidr-reference/)
+
+
 An interactive IPv4 subnetting calculator and networking study reference built with HTML, CSS, and vanilla JavaScript.
 
 > Built with assistance from ChatGPT and Claude
