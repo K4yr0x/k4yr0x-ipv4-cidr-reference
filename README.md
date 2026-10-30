@@ -8,7 +8,7 @@ An interactive IPv4 subnetting calculator and networking study reference built w
 > Built with assistance from ChatGPT and Claude
 
 ## Features
-
+![Preview](assets/toolpreview.png)
 ### Subnet Calculator
 - Calculate the network address and broadcast address.
 - Determine the subnet mask and CIDR prefix.
