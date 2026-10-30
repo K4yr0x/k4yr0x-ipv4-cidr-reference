@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0c1210">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'; object-src 'none'">
+<title>IPv4 / CIDR Reference</title>
+<style>
+  :root{
+    --bg:#0c1210;
+    --panel:#121a17;
+    --panel2:#17201c;
+    --line:#223029;
+    --text:#d9e6de;
+    --dim:#7b9389;
+    --accent:#5fd9a4;
+    --accent-dim:#2d6e51;
+    --amber:#e3b05c;
+    --mono:'IBM Plex Mono','Courier New',monospace;
+    --sans:'IBM Plex Sans',system-ui,sans-serif;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-attachment: fixed;
+  }
+  a{color:var(--accent);}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 60px;}
+
+  header{margin-bottom:28px;}
+  .brand{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:14px;
+    padding:5px 9px;
+    border:1px solid var(--accent-dim);
+    border-radius:3px;
+    color:var(--accent);
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.08em;
+  }
+  .brand-mark{color:var(--amber);}
+  .tag{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--accent);
+    letter-spacing:.02em;
+  }
+  h1{
+    font-family:var(--mono);
+    font-size:clamp(28px,5vw,40px);
+    margin:8px 0 6px;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  .sub{color:var(--dim);font-size:14.5px;max-width:60ch;line-height:1.5;}
+
+  nav{
+    display:flex;gap:6px;flex-wrap:wrap;
+    margin:22px 0 30px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:0;
+  }
+  nav button{
+    font-family:var(--mono);
+    font-size:12.5px;
+    background:none;
+    border:none;
+    color:var(--dim);
+    padding:9px 14px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+  }
+  nav button.active{color:var(--accent);border-bottom-color:var(--accent);}
+  nav button:hover{color:var(--text);}
+
+  section{display:none;}
+  section.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:20px 22px;
+    margin-bottom:16px;
+  }
+  .card h2{
+    font-family:var(--mono);
+    font-size:14px;
+    margin:0 0 14px;
+    color:var(--accent);
+    font-weight:600;
+  }
+  .row{display:flex;gap:14px;flex-wrap:wrap;}
+  .field{flex:1;min-width:160px;}
+  .field label{display:block;font-size:11.5px;color:var(--dim);margin-bottom:5px;font-family:var(--mono);}
+  .field input{
+    width:100%;
+    background:var(--panel2);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:15px;
+    padding:9px 10px;
+    border-radius:3px;
+  }
+  .field input:focus{outline:1px solid var(--accent);border-color:var(--accent);}
+
+  .result-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:10px;margin-top:16px;
+  }
+  .result{
+    background:var(--panel2);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:11px 13px;
+  }
+  .result .k{font-size:10.5px;color:var(--dim);font-family:var(--mono);margin-bottom:4px;}
+  .result .v{font-family:var(--mono);font-size:15.5px;color:var(--text);word-break:break-all;}
+  .result.hi .v{color:var(--accent);}
+
+  .steps{margin-top:18px;}
+  .step{
+    display:flex;flex-wrap:wrap;gap:12px;padding:10px 0;border-top:1px solid var(--line);
+    font-family:var(--mono);font-size:13px;
+  }
+  .step:first-child{border-top:none;}
+  .step .n{color:var(--accent);min-width:18px;}
+  .step .label{color:var(--dim);min-width:190px;}
+  .step .calc{color:var(--text);}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);}
+  th{font-family:var(--mono);font-size:11px;color:var(--dim);font-weight:600;}
+  td{font-family:var(--mono);}
+  tr:hover td{background:var(--panel2);}
+  .hi{color:var(--accent);}
+  .amber{color:var(--amber);}
+
+  .ref-card{margin-bottom:12px;}
+  .ref-card .head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .ref-card .name{font-family:var(--mono);color:var(--accent);font-size:14px;font-weight:600;}
+  .ref-card .range{font-family:var(--mono);color:var(--amber);font-size:13px;}
+  .ref-card p{color:var(--dim);font-size:13.5px;line-height:1.55;margin:8px 0 6px;}
+  .ref-card .ex{
+    font-family:var(--mono);font-size:12.5px;color:var(--text);
+    background:var(--panel2);border:1px solid var(--line);border-radius:3px;
+    padding:8px 10px;margin-top:6px;
+  }
+
+  .formula{
+    font-family:var(--mono);font-size:13.5px;background:var(--panel2);
+    border:1px solid var(--line);border-radius:3px;padding:10px 12px;margin:8px 0;
+    color:var(--text);
+  }
+  .formula .op{color:var(--accent);}
+
+  footer{margin-top:30px;color:var(--dim);font-size:11.5px;font-family:var(--mono);text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand"><span class="brand-mark">&gt;_</span> K4yr0x <span style="color:var(--dim)">/ NETWORKING NOTES</span></div>
+    <div class="tag">// ipv4 subnetting</div>
+    <h1>CIDR &amp; the Reserved Ranges</h1>
+    <p class="sub">The arithmetic behind a /N, and the special-purpose address blocks you'll keep running into.</p>
+  </header>
+
+  <nav>
+    <button class="active" data-tab="calc">Calculator</button>
+    <button data-tab="math">The Math</button>
+    <button data-tab="table">Quick Table</button>
+    <button data-tab="special">Reserved Addresses</button>
+  </nav>
+
+  <!-- CALCULATOR -->
+  <section id="calc" class="active">
+    <div class="card">
+      <h2>subnet calculator</h2>
+      <div class="row">
+        <div class="field">
+          <label for="ipIn">IP ADDRESS</label>
+          <input id="ipIn" value="192.168.1.64" spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="cidrIn">CIDR (/N)</label>
+          <input id="cidrIn" value="26" type="number" min="0" max="32">
+        </div>
+      </div>
+
+      <div class="result-grid" id="results"></div>
+
+      <div class="steps" id="steps"></div>
+    </div>
+  </section>
+
+  <!-- MATH -->
+  <section id="math">
+    <div class="card">
+      <h2>core formulas</h2>
+      <div class="formula">host_bits <span class="op">=</span> 32 − N</div>
+      <div class="formula">total_addresses <span class="op">=</span> 2 ^ host_bits</div>
+      <div class="formula">usable_hosts <span class="op">=</span> 2 ^ host_bits <span class="op">−</span> 2  <span style="color:var(--dim)">(network + broadcast reserved — traditional subnets only; /31 and /32 are exceptions, see Reserved Addresses)</span></div>
+    </div>
+
+    <div class="card">
+      <h2>locating the split — mod &amp; ceil</h2>
+      <p style="color:var(--dim);font-size:13.5px;line-height:1.6;margin-top:0">
+        Most /N values don't land cleanly on an octet edge (only /0, /8, /16, /24 and /32 do; /0 is the special case explained below). These two operations find exactly where inside the 4 octets the network/host boundary falls.
+      </p>
+      <div class="formula">boundary_octet <span class="op">=</span> ceil(N / 8)<br>
+        <span style="color:var(--dim);font-size:12px">ceil = round UP, always. ceil(26/8) = ceil(3.25) = 4 → split is in octet 4</span>
+      </div>
+      <div class="formula">network_bits_in_octet <span class="op">=</span> N − 8 × (boundary_octet − 1)<br>
+        <span style="color:var(--dim);font-size:12px">how many of that octet's 8 bits the prefix locks down (0–8). 26 − 8×3 = 2</span>
+      </div>
+      <div class="formula">host_bits_in_octet <span class="op">=</span> 8 − network_bits_in_octet<br>
+        <span style="color:var(--dim);font-size:12px">when N is a multiple of 8 the boundary octet is entirely network → 0 host bits (/8, /16, /24, /32). Using N mod 8 instead breaks those cases: 24 mod 8 = 0 would wrongly leave 8 host bits in a fully locked octet.</span>
+      </div>
+      <p style="color:var(--dim);font-size:13px;line-height:1.6">
+        <b style="color:var(--text)">/0 special case:</b> ceil(0/8) = 0, and there is no octet 0. By convention /0 is treated as boundary octet 1 with network_bits_in_octet = 0, so all 8 bits of octet 1 remain host bits — matching mask 0.0.0.0 and the range 0.0.0.0 – 255.255.255.255. The calculator applies the same clamp (<span class="op">|| 1</span>) rather than using the raw ceil result.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>block size &amp; mask</h2>
+      <div class="formula">block_size <span class="op">=</span> 2 ^ host_bits_in_octet<br>
+        <span style="color:var(--dim);font-size:12px">spacing between valid subnet starts in that octet</span>
+      </div>
+      <div class="formula">mask_value_for_octet <span class="op">=</span> 256 − block_size<br>
+        <span style="color:var(--dim);font-size:12px">the octet has 256 possible values — block size (free) + mask (locked) always sum to 256</span>
+      </div>
+      <p style="color:var(--dim);font-size:13px;margin-top:14px">Every octet <em>before</em> the boundary octet is fully network → mask value 255.<br>Every octet <em>after</em> it is fully host → mask value 0.</p>
+      <p style="color:var(--dim);font-size:13px;margin-top:10px">When host_bits_in_octet = 0 the boundary octet is fully network: block_size becomes 2^0 = 1 and mask_value 256 − 1 = 255, so that octet contributes nothing to host addressing. /8, /16, /24 and /32 all land here.</p>
+    </div>
+
+    <div class="card">
+      <h2>worked example — 192.168.1.64/26</h2>
+      <div class="steps">
+        <div class="step"><span class="n">1</span><span class="label">host bits</span><span class="calc">32 − 26 = 6</span></div>
+        <div class="step"><span class="n">2</span><span class="label">total addresses</span><span class="calc">2^6 = 64</span></div>
+        <div class="step"><span class="n">3</span><span class="label">usable hosts</span><span class="calc">64 − 2 = 62</span></div>
+        <div class="step"><span class="n">4</span><span class="label">boundary octet</span><span class="calc">ceil(26/8) = ceil(3.25) = 4</span></div>
+        <div class="step"><span class="n">5</span><span class="label">network bits in octet 4</span><span class="calc">26 − 8 × 3 = 2</span></div>
+        <div class="step"><span class="n">6</span><span class="label">host bits in octet 4</span><span class="calc">8 − 2 = 6</span></div>
+        <div class="step"><span class="n">7</span><span class="label">block size</span><span class="calc">2^6 = 64 → starts: 0, 64, 128, 192</span></div>
+        <div class="step"><span class="n">8</span><span class="label">mask for octet 4</span><span class="calc">256 − 64 = 192 → 255.255.255.192</span></div>
+        <div class="step"><span class="n">9</span><span class="label">network address</span><span class="calc">192.168.1.64</span></div>
+        <div class="step"><span class="n">10</span><span class="label">broadcast address</span><span class="calc">192.168.1.127</span></div>
+        <div class="step"><span class="n">11</span><span class="label">usable range</span><span class="calc">192.168.1.65 – 192.168.1.126</span></div>
+      </div>
+      <p style="color:var(--dim);font-size:13px;line-height:1.6;margin-top:14px">
+        Clean-boundary check: /24 → ceil(24/8) = 3, network bits = 24 − 8×2 = 8, host bits = 8 − 8 = 0. Octet 3 is fully locked, so the mask is 255.255.255.0 and all host bits live in octet 4.
+      </p>
+    </div>
+  </section>
+
+  <!-- QUICK TABLE -->
+  <section id="table">
+    <div class="card">
+      <h2>common cidr values</h2>
+      <table>
+        <thead><tr><th>/N</th><th>Host bits</th><th>Total addr</th><th>Usable</th><th>Block size</th><th>Mask octet</th></tr></thead>
+        <tbody id="quickTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SPECIAL -->
+  <section id="special">
+    <div class="ref-card card">
+      <div class="head"><span class="name">Network address</span><span class="range">all host bits = 0</span></div>
+      <p>Identifies the subnet itself. In traditional subnets (a /30 or larger) the all-zero host portion is never assigned to a device. /31 and /32 are special cases — see the two cards below.</p>
+      <div class="ex">192.168.1.0/24 → network address = 192.168.1.0</div>
+    </div>
+
+    <div class="ref-card card">
+      <div class="head"><span class="name">Broadcast address</span><span class="range">all host bits = 1</span></div>
+      <p>A packet sent here reaches every device on the subnet at once. The all-ones host portion is only reserved in traditional subnets — /31 point-to-point links and /32 host routes have no broadcast address at all.</p>
+      <div class="ex">192.168.1.0/24 → broadcast address = 192.168.1.255</div>
+    </div>
+
+    <div class="ref-card card">
+      <div class="head"><span class="name">/31 — point-to-point</span><span class="range">RFC 3021</span></div>
+      <p>Two addresses, both usable, and no network or broadcast address. Originally this was a /30 with two wasted addresses; a /31 reclaims them on point-to-point links (router-to-router, VPN tunnels). Not appropriate on a shared LAN segment, where broadcast still matters.</p>
+      <div class="ex">10.0.0.4/31 → usable 10.0.0.4 and 10.0.0.5 · mask 255.255.255.254</div>
+    </div>
+
+    <div class="ref-card card">
+      <div class="head"><span class="name">/32 — single address</span><span class="range">host route</span></div>
+      <p>Exactly one address: network and host portions collapse into the same value, so there is no separate network or broadcast address and nothing to subnet. Used for host routes (one entry pointing at one machine), loopback addresses on routers, and firewall rules that target a single host.</p>
+      <div class="ex">10.0.0.7/32 → 1 address, mask 255.255.255.255, usable = 10.0.0.7 only</div>
+    </div>
+
+    <div class="ref-card card">
+      <div class="head"><span class="name">Loopback</span><span class="range">127.0.0.0/8</span></div>
+      <p>Points back to your own machine — traffic never actually touches the network.</p>
+      <div class="ex">127.0.0.1 (localhost) → testing a local web server on your own box</div>
+    </div>
+
+    <div class="ref-card card">
+      <div class="head"><span class="name">Default gateway</span><span class="range">convention, not a fixed range</span></div>
+      <p>The router address a device sends traffic to for anything outside its own subnet. Often the first or last usable host — but that's config, not a protocol rule.</p>
+      <div class="ex">Home router commonly at 192.168.1.1</div>
+    </div>
+
+    <div class="ref-card card">
+      <div class="head"><span class="name">Private ranges (RFC 1918)</span><span class="range">internal use only</span></div>
+      <p>Not globally routable on the public internet; these ranges can be reused inside separate private networks.</p>
+      <div class="ex">10.0.0.0/8 &nbsp;·&nbsp; 172.16.0.0/12 &nbsp;·&nbsp; 192.168.0.0/16</div>
+    </div>
+
+    <div class="ref-card card">
+      <div class="head"><span class="name">APIPA / link-local</span><span class="range">169.254.0.0/16</span></div>
+      <p>A device may self-assign an address in this range when it cannot obtain a usable DHCP lease. Treat it as a reason to investigate DHCP configuration and connectivity on that segment — scope, VLAN, cabling, or a missing/duplicate DHCP server — not as proof that the server is unreachable.</p>
+      <div class="ex">169.254.23.108 appears → check DHCP configuration, lease availability and link state before concluding anything</div>
+    </div>
+
+    <div class="ref-card card">
+      <div class="head"><span class="name">Multicast</span><span class="range">224.0.0.0/4</span></div>
+      <p>One-to-many — only devices <em>subscribed</em> to that group receive it, unlike broadcast which hits everyone.</p>
+      <div class="ex">224.0.0.251 → mDNS, the mechanism behind "hostname.local" resolution</div>
+    </div>
+
+    <div class="ref-card card">
+      <div class="head"><span class="name">0.0.0.0</span><span class="range">"this host" / default route</span></div>
+      <p>Two meanings, both legitimate. In a routing table it is the catch-all default route: "anything I have no better match for, send here." In a listening socket it is a <b style="color:var(--text)">wildcard bind</b> — the server binds to 0.0.0.0 (INADDR_ANY), meaning "accept connections on every local interface address", not a specific one.</p>
+      <div class="ex">listen 0.0.0.0:80 → wildcard socket: reachable via any local interface, not one pinned IP</div>
+    </div>
+
+    <div class="ref-card card">
+      <div class="head"><span class="name">255.255.255.255</span><span class="range">limited broadcast</span></div>
+      <p>Reaches every device on the local physical segment — used even before a device has an IP of its own.</p>
+      <div class="ex">DHCP Discover packets are sent here, since the device has no identity yet</div>
+    </div>
+  </section>
+
+  <footer>Built by K4yr0x · chain: N → host bits → boundary octet (ceil/mod) → block size → mask → range → reserved addresses</footer>
+</div>
+
+<script>
+// Tabs
+document.querySelectorAll('nav button').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach((button) => button.classList.remove('active'));
+    document.querySelectorAll('section').forEach((section) => section.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+/** Parse strict dotted-decimal IPv4 notation. */
+function ipToOctets(ip) {
+  const parts = ip.trim().split('.');
+  if (parts.length !== 4) return null;
+  const octetPattern = /^(0|[1-9]\d{0,2})$/;
+  const octets = [];
+  for (const part of parts) {
+    if (!octetPattern.test(part)) return null;
+    const value = Number(part);
+    if (value > 255) return null;
+    octets.push(value);
+  }
+  return octets;
+}
+
+function octetsToBigInt(octets) {
+  return octets.reduce((value, octet) => (value << 8n) | BigInt(octet), 0n);
+}
+
+function bigIntToOctets(value) {
+  return [
+    Number((value >> 24n) & 255n),
+    Number((value >> 16n) & 255n),
+    Number((value >> 8n) & 255n),
+    Number(value & 255n)
+  ];
+}
+
+/**
+ * Calculate an IPv4 subnet using integer bit operations.
+ * /31 has two usable addresses on point-to-point links (RFC 3021).
+ * /32 represents one address, commonly used for a host route.
+ */
+function calculateSubnet(ip, prefix) {
+  const octets = ipToOctets(ip);
+  if (!octets || !Number.isInteger(prefix) || prefix < 0 || prefix > 32) return null;
+
+  const maxAddress = 0xffffffffn;
+  const hostBits = 32 - prefix;
+  const total = 2 ** hostBits;
+  const mask = prefix === 0 ? 0n : (maxAddress << BigInt(32 - prefix)) & maxAddress;
+  const addressInt = octetsToBigInt(octets);
+  const networkInt = addressInt & mask;
+  const lastInt = networkInt | (maxAddress ^ mask);
+  const networkOctets = bigIntToOctets(networkInt);
+  const lastOctets = bigIntToOctets(lastInt);
+  const maskOctets = bigIntToOctets(mask);
+
+  let usable;
+  let firstUsable;
+  let lastUsable;
+  let semantics;
+  if (prefix === 31) {
+    usable = 2;
+    firstUsable = networkOctets.join('.');
+    lastUsable = lastOctets.join('.');
+    semantics = '/31 point-to-point subnet: both addresses are usable; IPv4 broadcast is not used.';
+  } else if (prefix === 32) {
+    usable = 1;
+    firstUsable = octets.join('.');
+    lastUsable = octets.join('.');
+    semantics = '/32 single-address prefix: one address, commonly used for a host route; there is no separate network or broadcast address.';
+  } else {
+    usable = total - 2;
+    firstUsable = bigIntToOctets(networkInt + 1n).join('.');
+    lastUsable = bigIntToOctets(lastInt - 1n).join('.');
+    semantics = 'Traditional subnet calculation: the network and broadcast addresses are excluded from the usable host range.';
+  }
+
+  const boundaryOctet = Math.ceil(prefix / 8) || 1;
+  const bitsUsedInOctet = prefix - (boundaryOctet - 1) * 8;
+  const hostBitsInOctet = 8 - bitsUsedInOctet;
+  const blockSize = 2 ** hostBitsInOctet;
+
+  return {
+    octets, prefix, hostBits, total, usable,
+    network: networkOctets.join('.'),
+    broadcast: lastOctets.join('.'),
+    mask: maskOctets.join('.'),
+    firstUsable, lastUsable, boundaryOctet,
+    bitsUsedInOctet, hostBitsInOctet, blockSize,
+    maskValue: maskOctets[boundaryOctet - 1], semantics
+  };
+}
+
+function addResult(container, label, value, highlight = false) {
+  const card = document.createElement('div');
+  card.className = 'result' + (highlight ? ' hi' : '');
+  const key = document.createElement('div');
+  key.className = 'k';
+  key.textContent = label.toUpperCase();
+  const output = document.createElement('div');
+  output.className = 'v';
+  output.textContent = String(value);
+  card.append(key, output);
+  container.appendChild(card);
+}
+
+function addStep(container, label, calculation, number) {
+  const row = document.createElement('div');
+  row.className = 'step';
+  const n = document.createElement('span');
+  n.className = 'n';
+  n.textContent = String(number);
+  const labelEl = document.createElement('span');
+  labelEl.className = 'label';
+  labelEl.textContent = label;
+  const calc = document.createElement('span');
+  calc.className = 'calc';
+  calc.textContent = calculation;
+  row.append(n, labelEl, calc);
+  container.appendChild(row);
+}
+
+function compute() {
+  const ipStr = document.getElementById('ipIn').value;
+  const prefixText = document.getElementById('cidrIn').value.trim();
+  const resultsEl = document.getElementById('results');
+  const stepsEl = document.getElementById('steps');
+  resultsEl.replaceChildren();
+  stepsEl.replaceChildren();
+
+  // Require a complete integer prefix; parseInt('26abc') must not silently become 26.
+  if (!/^(0|[1-9]|[12]\d|3[0-2])$/.test(prefixText)) {
+    addResult(resultsEl, 'Error', 'Enter a CIDR prefix from 0 to 32.');
+    return;
+  }
+  const prefix = Number(prefixText);
+  const subnet = calculateSubnet(ipStr, prefix);
+  if (!subnet) {
+    addResult(resultsEl, 'Error', 'Enter a valid IPv4 address (four decimal octets, each 0–255).');
+    return;
+  }
+
+  addResult(resultsEl, 'Network address', subnet.network, true);
+  addResult(resultsEl, 'Broadcast / last address', subnet.broadcast, true);
+  addResult(resultsEl, 'Subnet mask', subnet.mask);
+  addResult(resultsEl, 'Host bits', subnet.hostBits);
+  addResult(resultsEl, 'Total addresses', subnet.total.toLocaleString());
+  addResult(resultsEl, 'Usable addresses', subnet.usable.toLocaleString());
+  addResult(resultsEl, 'Block size (octet ' + subnet.boundaryOctet + ')', subnet.blockSize);
+  addResult(resultsEl, 'Usable range', subnet.firstUsable + (subnet.firstUsable === subnet.lastUsable ? '' : ' – ' + subnet.lastUsable), true);
+
+  const trueMod = prefix % 8;
+  const modLine = trueMod === 0
+    ? `${prefix} mod 8 = 0 → clean boundary, octet ${subnet.boundaryOctet} is fully network`
+    : `${prefix} mod 8 = ${trueMod}`;
+
+  const steps = [
+    ['host bits', `32 − ${prefix} = ${subnet.hostBits}`],
+    ['total addresses', `2^${subnet.hostBits} = ${subnet.total.toLocaleString()}`],
+    ['boundary octet', `ceil(${prefix}/8) = ${subnet.boundaryOctet}`],
+    ['network bits in octet', modLine],
+    ['host bits in octet', `8 − ${subnet.bitsUsedInOctet} = ${subnet.hostBitsInOctet}`],
+    ['block size', `2^${subnet.hostBitsInOctet} = ${subnet.blockSize}`],
+    ['mask for octet ' + subnet.boundaryOctet, `mask octet = ${subnet.maskValue}`],
+    ['address semantics', subnet.semantics]
+  ];
+  steps.forEach(([label, calculation], index) => addStep(stepsEl, label, calculation, index + 1));
+}
+
+document.getElementById('ipIn').addEventListener('input', compute);
+document.getElementById('cidrIn').addEventListener('input', compute);
+compute();
+
+// Quick table: the final column is the mask value in the boundary octet.
+const rows = [8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32];
+const tbody = document.getElementById('quickTable');
+rows.forEach((prefix) => {
+  const hostBits = 32 - prefix;
+  const total = 2 ** hostBits;
+  const usable = prefix === 31 ? 2 : (prefix === 32 ? 1 : total - 2);
+  const boundaryOctet = Math.ceil(prefix / 8) || 1;
+  const bitsUsed = prefix - (boundaryOctet - 1) * 8;
+  const hostBitsInOctet = 8 - bitsUsed;
+  const blockSize = 2 ** hostBitsInOctet;
+  const maskValue = 256 - blockSize;
+  const tr = document.createElement('tr');
+  const values = [
+    { text: '/' + prefix, className: 'hi' },
+    { text: String(hostBits) },
+    { text: total.toLocaleString() },
+    { text: usable.toLocaleString() },
+    { text: String(blockSize), className: 'amber' },
+    { text: String(maskValue) }
+  ];
+  values.forEach(({ text, className = '' }) => {
+    const td = document.createElement('td');
+    td.className = className;
+    td.textContent = text;
+    tr.appendChild(td);
+  });
+  tbody.appendChild(tr);
+});
+</script>
+</body>
+</html>
